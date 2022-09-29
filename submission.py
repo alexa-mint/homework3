@@ -1,3 +1,4 @@
+import re
 from typing import Callable, List, Set
 
 import shell
@@ -43,46 +44,81 @@ def segmentWords(query: str, unigramCost: Callable[[str], float]) -> str:
 ############################################################
 # Problem 2b: Solve the vowel insertion problem under a bigram cost
 
+# class VowelInsertionProblem(util.SearchProblem):
+#     def __init__(self, queryWords, bigramCost, possibleFills):
+#         # queryWords - это входная последовательность слов, не содержащих гласных
+#         self.queryWords = queryWords
+#         # bigramCost - это функция, которая принимает две строки, представляющие два последовательных слова, 
+#         # и предоставляет их биграмм-скор.
+#         self.bigramCost = bigramCost
+#         # possibleFills - это функция, которая принимает слово в виде строки и возвращает набор реконструкций
+#         self.possibleFills = possibleFills
+
+#     def startState(self):
+#         return (self.queryWords[0], 0)
+
+#     def isEnd(self, state):
+#         return state[1] == len(self.queryWords) - 1
+
+#     def succAndCost(self, state):
+#         result = []
+#         print(f"all state - {state}")
+#         index = state[1] + 1
+#         choices = self.possibleFills(self.queryWords[index]).copy()
+#         # print(f"choices {choices}")
+#         if len(choices) == 0:
+#             choices.add(self.queryWords[index])
+#         for action in choices:
+#             # print(f"state - ")
+#             cost = self.bigramCost(state[0], action)
+#             print(f"cost - {cost} ; state - {state[0]} ; action - {action}")
+#             result.append((action, (action, index), cost))
+#             # print(f"result {result}")   
+#         return result
+
+# def insertVowels(queryWords, bigramCost, possibleFills):
+#     if len(queryWords) == 0:
+#         return ''
+#     else:
+#         queryWords.insert(0, wordsegUtil.SENTENCE_BEGIN)
+
+#     ucs = util.UniformCostSearch(verbose=1)
+#     ucs.solve(VowelInsertionProblem(queryWords, bigramCost, possibleFills))
+#     words = ' '.join(ucs.actions)
+#     return words
+
+
 class VowelInsertionProblem(util.SearchProblem):
     def __init__(self, queryWords, bigramCost, possibleFills):
-        # queryWords - это входная последовательность слов, не содержащих гласных
         self.queryWords = queryWords
-        # bigramCost - это функция, которая принимает две строки, представляющие два последовательных слова, 
-        # и предоставляет их оценку по биграмме.
         self.bigramCost = bigramCost
-        # possibleFills - это функция, которая принимает слово в виде строки и возвращает набор реконструкций
         self.possibleFills = possibleFills
 
     def startState(self):
-        print(f" startstate - {self.queryWords[0], 0}")
-        return (self.queryWords[0], 0)
+        return self.queryWords[0], 1
 
     def isEnd(self, state):
-        print(f" isEnd - {state} - {state[1] == len(self.queryWords) - 1}")
-        return state[1] == len(self.queryWords) - 1
+        return state[1] == len(self.queryWords)
 
     def succAndCost(self, state):
-        result = []
-        index = state[1] + 1
-        choices = self.possibleFills(self.queryWords[index]).copy()
-        if len(choices) == 0:
-            choices.add(self.queryWords[index])
-        for action in choices:
-            cost = self.bigramCost(state[0], action)
-            result.append((action, (action, index), cost))
-        # print(result)    
-        return result
+        previousFill, state = state
+        word = self.queryWords[state]
+        possibleFills = self.possibleFills(word)
+        results = []
+        for fill in possibleFills:
+            results.append((fill, (fill, state+1), self.bigramCost(previousFill, fill)))
+            print(results[-1])
+        if len(results) == 0:
+            return [(word, (word, state+1), self.bigramCost(previousFill, word))]
+        return results
 
 def insertVowels(queryWords, bigramCost, possibleFills):
-    if len(queryWords) == 0:
-        return ''
-    else:
-        queryWords.insert(0, wordsegUtil.SENTENCE_BEGIN)
-
-    ucs = util.UniformCostSearch(verbose=1)
+    if len(queryWords) == 0: 
+        return ""
+    queryWords = [wordsegUtil.SENTENCE_BEGIN] + queryWords
+    ucs = util.UniformCostSearch(verbose=0)
     ucs.solve(VowelInsertionProblem(queryWords, bigramCost, possibleFills))
-    words = ' '.join(ucs.actions)
-    return words
+    return " ".join(ucs.actions)
 
 
 ############################################################
