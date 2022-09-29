@@ -112,6 +112,7 @@ class VowelInsertionProblem(util.SearchProblem):
             return [(word, (word, state+1), self.bigramCost(previousFill, word))]
         return results
 
+
 def insertVowels(queryWords, bigramCost, possibleFills):
     if len(queryWords) == 0: 
         return ""
